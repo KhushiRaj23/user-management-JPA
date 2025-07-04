@@ -16,7 +16,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -55,10 +58,33 @@ public class UserControllerTest {
     @Test
     void testGetUserByIdFound() throws Exception {
         //used to mock http request like GET,PUT,POST.....
-        mockMvc.perform(get("/api/users/{id}",user1.getId()).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        //ACT
+        mockMvc.perform(get("/api/users/{id}", user1.getId()).contentType(MediaType.APPLICATION_JSON))
+                //asserting
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(user1.getId().intValue())))
+                .andExpect(jsonPath("$.name",is(user1.getName())))
+                .andExpect(jsonPath("$.email",is(user1.getEmail())));
     }
 
+    @Test
+    void testCreateUsers()throws Exception{
+        //---ARRANGE---
+        User newUser1=new User("utkarsh","utkarsh@gmail.com");
+        User newUser2=new User("Khushi","khushi@gmail.com");
+        List<User> newUsers=Arrays.asList(newUser1,newUser2);
 
-
-
+        //---ACT---
+        mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(newUsers)))
+        //---ASSERT---
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$",hasSize(2)))
+                .andExpect(jsonPath("$[0].id",notNullValue()))
+                .andExpect(jsonPath("$[0].name",is("utkarsh")))
+                .andExpect(jsonPath("$[0].email",is("utkarsh@gmail.com")))
+                .andExpect(jsonPath("$[1].id",notNullValue()))
+                .andExpect(jsonPath("$[1].name",is("Khushi")))
+                .andExpect(jsonPath("$[1].email",is("khushi@gmail.com")))
+        ;
+    }
 }
