@@ -152,6 +152,9 @@ user-management-api/                     ← project root
 
 ---
 
+## FrontEnd Integration
+[Check this readme.md](https://github.com/KhushiRaj23/user-management-JPA/blob/frontEnd-Integration/README.md)
+
 ### Author
 
 **Khushi Raj** – *B.Tech CSE*
