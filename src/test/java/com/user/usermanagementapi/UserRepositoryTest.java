@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
 import java.util.Optional;
 
 @DataJpaTest //loads only a slice of the spring context relevant to JPA
@@ -24,6 +26,7 @@ public class UserRepositoryTest {
     private TestEntityManager entityManager;
     private User user1;
     private User user2;
+    private User user3;
 
     @BeforeEach //run before every test
     void setUp(){
@@ -46,7 +49,40 @@ public class UserRepositoryTest {
 
     @Test
     void testFindByEmailNotFound() throws Exception {
-        Optional<User> result=userRepository.findByEmail("ghhhtyyy@example.com");
+        Optional<User> result=userRepository.findByEmail("ghhhtyyy@example.com"); //pass an email which is not present in userRepository.
         assertThat(result).isNotPresent();
     }
+
+    @Test
+    void testSaveUser()throws Exception {
+        User newUser=new User("meena","meena@example.com");
+        User savedUser=userRepository.save(newUser);
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getId()).isNotNull();
+        assertThat(savedUser.getName()).isEqualTo("meena");
+        assertThat(savedUser.getEmail()).isEqualTo("meena@example.com");
+    }
+
+    @Test
+    void testUpdateUser() throws Exception{
+        String newName="mera";
+        String newEmail="mera@example.com";
+        user3=new User("seetal","seetal@example");
+
+        user3.setName(newName);
+        user3.setEmail(newEmail);
+        User updatedUser=userRepository.save(user3);
+        assertThat(updatedUser).isNotNull();
+    }
+    @Test
+    void testDeleteUser()throws Exception {
+        userRepository.delete(user1);
+        Optional<User> users=userRepository.findById(user1.getId());
+        assertThat(users).isNotPresent();
+
+    }
+
+
+
+
 }
