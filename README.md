@@ -153,7 +153,7 @@ user-management-api/                     ← project root
 ---
 
 ## FrontEnd Integration
-[Check this readme.md](https://github.com/KhushiRaj23/user-management-JPA/blob/frontEnd-Integration/README.md)
+[Check this frontendreadme.md](https://github.com/KhushiRaj23/user-management-JPA/blob/frontEnd-Integration/FRONTENDREADME.md)
 
 ### Author
 
