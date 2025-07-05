@@ -98,8 +98,9 @@ public class UserControllerTest {
 
     @Test
     void testDeleteUserNotFound() throws Exception{
-        Long nonExistedId=user1.getId()+101;  //any value which not exists in database
+        Long nonExistedId=user1.getId()+101;  //any value which does not exist in database
         mockMvc.perform(delete("/api/users/{id}",nonExistedId)).andExpect(status().isNotFound());
         assertEquals(initialUserCount,userRepository.count());
     }
+
 }
