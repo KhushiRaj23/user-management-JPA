@@ -155,6 +155,22 @@ user-management-api/                     ← project root
 ## FrontEnd Integration
 [Check this frontendreadme.md](https://github.com/KhushiRaj23/user-management-JPA/blob/frontEnd-Integration/FRONTENDREADME.md)
 
+## 🪄Lombok 
+Lombok achieves reducing boilerplate code by generating the code automatically during compilation based on annotations you add to your java classes.
+
+- Add this in your pom.xml
+```
+<dependency>
+		<groupId>org.projectlombok</groupId>
+		<artifactId>lombok</artifactId>
+		<version>1.18.38</version>
+		<scope>provided</scope>
+	</dependency>
+```
+- add Lombok plugin (if using intelliJ)
+- check User.java for usages
+  | Note: Java 24 may not support Lombok try using java 17 
+
 ### Author
 
 **Khushi Raj** – *B.Tech CSE*
