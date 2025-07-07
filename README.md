@@ -171,6 +171,18 @@ Lombok achieves reducing boilerplate code by generating the code automatically d
 - check User.java for usages
   | Note: Java 24 may not support Lombok try using java 17 
 
+
+## 👨‍🔧Service
+### Service Layer — Authentication & Authorization
+
+| Component            | Purpose                                        | Key Points                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`SecurityConfig`** | Central Spring‑Security configuration.         | \* Registers a custom `UserDetailsService`.<br>\* Uses **BCrypt** to hash passwords.<br>\* Declares a `DaoAuthenticationProvider` for DB‑backed login.<br>\* Enables CORS for any origin and disables CSRF (pure REST).<br>\* Exposes a stateless **HTTP Basic** filter chain:<br>  \* `POST/DELETE /api/users/**` → `ROLE_ADMIN` only<br>  \* `GET   /api/users/**` → `ROLE_USER` or `ROLE_ADMIN`<br>  \* `/api/users/register`, `/api/users/page` are public. |
+| **`UserDetail`**     | Custom implementation of `UserDetailsService`. | \* Looks up a user by **email** and maps it to Spring‑Security’s `User` object.<br>\* Converts every role string in `user_roles` to a `SimpleGrantedAuthority`.                                                                                                                                                                                                                                                                                                 |
+| **`User` Entity**    | JPA model with Lombok to remove boilerplate.   | \* Fields: `id`, `name`, `email`, `password`, timestamps.<br>\* Roles stored as an eager `@ElementCollection` (`user_roles` table).<br>\* Passwords are saved **already hashed** (`BCryptPasswordEncoder`).                                                                                                                                                                                                                                                     |
+
+> **Result:** the API is protected end‑to‑end: credentials are securely hashed, every request is authorised by role, and no server‑side session is kept (perfect for frontend/SPAs or mobile clients).
+
 ### Author
 
 **Khushi Raj** – *B.Tech CSE*
