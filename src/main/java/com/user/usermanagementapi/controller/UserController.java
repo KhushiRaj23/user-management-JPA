@@ -14,11 +14,16 @@ import java.util.List;
 import java.util.Optional;
 
 //mark this class as a REST controller, handling incoming HTTP requests
+@CrossOrigin(origins = {
+        "http://localhost:8080",   // Spring‑Boot static pages
+        "http://127.0.0.1:5500"    // VS‑Code Live‑Server, etc.
+})
 @RestController
 @RequestMapping("/api/users")  //Base path for all the endpoints in this controller
 public class UserController {
     @Autowired //inject the UserRepository dependency
     private UserRepository userRepository;
+
 
     @PostMapping
     public ResponseEntity<List<User>> createUser(@Valid @RequestBody List<@Valid User> users){
