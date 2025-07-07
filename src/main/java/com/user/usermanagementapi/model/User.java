@@ -36,6 +36,11 @@ public class User {
     private LocalDateTime updatedAt;
 
     public User(){}
+    public User(String name,String email){
+        this.name=name;
+        this.email=email;
+
+    }
     public User(Long id,String name,String email,LocalDateTime createdAt,LocalDateTime updatedAt){
         this.id=id;
         this.name=name;
