@@ -5,16 +5,13 @@ import com.user.usermanagementapi.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Arrays;
 import java.util.Optional;
 
 @DataJpaTest //loads only a slice of the spring context relevant to JPA
@@ -31,15 +28,15 @@ public class UserRepositoryTest {
     @BeforeEach //run before every test
     void setUp(){
         userRepository.deleteAllInBatch();
-        user1=new User("rhea sharma","rhea@example.com");
-        user2=new User("priya gupta","priyagupta@gmail.com");
+        user1=new User("rhea sharma","rhea@example.com","rhea123");
+        user2=new User("priya gupta","priyagupta@gmail.com","priya123");
         entityManager.persist(user1);
         entityManager.persist(user2);
         entityManager.flush();
         entityManager.clear();
     }
     @Test
-    void testFindByEmailFound() throws Exception {
+    void testFindByEmailFound() {
         Optional<User> foundUser=userRepository.findByEmail(user1.getEmail());
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getName()).isEqualTo(user1.getName());
@@ -48,14 +45,14 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void testFindByEmailNotFound() throws Exception {
+    void testFindByEmailNotFound() {
         Optional<User> result=userRepository.findByEmail("ghhhtyyy@example.com"); //pass an email which is not present in userRepository.
         assertThat(result).isNotPresent();
     }
 
     @Test
-    void testSaveUser()throws Exception {
-        User newUser=new User("meena","meena@example.com");
+    void testSaveUser() {
+        User newUser=new User("meena","meena@example.com","meena123");
         User savedUser=userRepository.save(newUser);
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getId()).isNotNull();
@@ -64,18 +61,23 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void testUpdateUser() throws Exception{
+    void testUpdateUser() {
         String newName="mera";
         String newEmail="mera@example.com";
-        user3=new User("seetal","seetal@example");
+        String newPassword="1234";
 
-        user3.setName(newName);
-        user3.setEmail(newEmail);
-        User updatedUser=userRepository.save(user3);
-        assertThat(updatedUser).isNotNull();
+        User existingUser=userRepository.findById(user2.getId()).orElseThrow();
+        existingUser.setName(newName);
+        existingUser.setEmail(newEmail);
+        existingUser.setPassword(newPassword);
+        User updatedUser = userRepository.save(existingUser);
+
+        assertThat(updatedUser.getName()).isEqualTo(newName);
+        assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
+        assertThat(updatedUser.getPassword()).isEqualTo(newPassword);
     }
     @Test
-    void testDeleteUser()throws Exception {
+    void testDeleteUser() {
         userRepository.delete(user1);
         Optional<User> users=userRepository.findById(user1.getId());
         assertThat(users).isNotPresent();
