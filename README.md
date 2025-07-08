@@ -6,6 +6,22 @@ RESTful CRUD service built with **Spring Boot 3 + Spring Data JPA + Postgre
 <img src="https://github.com/user-attachments/assets/cc8e8733-d865-4ec9-9105-4694d3ce07e1" width="250"/>
 
 ---
+## 📑 Table of Contents
+1. [Features](#features)
+2. [Tech Stack](#tech-stack)
+3. [Quick Start](#quick-start)
+4. [API Reference](#api-reference)
+5. [Database Schema](#database-schema)
+6. [Project Layout](#project-layout)
+7. [Testing](#testing)
+8. [FrontEnd Integration](#frontend-integration)
+9. [Lombok](#lombok)
+10. [Service — Authentication & Authorization](#service)
+11. [JWT Authentication](#jwt-authentication)
+12. [Author](#author)
+
+
+---
 
 ## ✨ Features
 | Capability | Details |
@@ -19,7 +35,7 @@ RESTful CRUD service built with **Spring Boot 3 + Spring Data JPA + Postgre
 
 ---
 
-## 🏗 Tech Stack
+## 🏗 Tech-Stack
 
 | Layer | Library/Tool |
 |-------|--------------|
@@ -32,7 +48,7 @@ RESTful CRUD service built with **Spring Boot 3 + Spring Data JPA + Postgre
 
 ---
 
-## ⚡️ Quick Start
+## ⚡Quick-Start
 
 ```bash
 # 1 Clone
@@ -57,7 +73,7 @@ The API starts on **[http://localhost:8080](http://localhost:8080)** by default.
 
 ---
 
-## 📖 API Reference
+## 📖 API-Reference
 
 | Method   | Endpoint          | Body / Params                                    | Purpose             |
 | -------- | ----------------- | ------------------------------------------------ | ------------------- |
@@ -70,13 +86,15 @@ The API starts on **[http://localhost:8080](http://localhost:8080)** by default.
 
 > All responses are JSON; validation errors return HTTP `400` with a human‑readable message.
 
+[Check User Controller](src/main/java/com/user/usermanagementapi/controller/UserController.java)
+
 ---
 
-## 🗄 Database Schema
+## 🗄 Database-Schema
 
 ```text
 users
-├─ id          BIGSERIAL PK
+├─ id          BIGSERI(AL PK
 ├─ name        VARCHAR(100)  NOT NULL
 ├─ email       VARCHAR(255)  NOT NULL UNIQUE
 ├─ created_at  TIMESTAMP     DEFAULT now()
@@ -86,9 +104,11 @@ users
 JPA/Hibernate creates (or updates) the table automatically thanks to
 `spring.jpa.hibernate.ddl-auto=update`.
 
+[Check users entity](src/main/java/com/user/usermanagementapi/model/User.java)
+
 ---
 
-## 🗂 Project Layout
+## 🗂 Project-Layout
 
 ```
 src
@@ -150,9 +170,11 @@ user-management-api/                     ← project root
 
 ![Screenshot 2025-07-04 165642](https://github.com/user-attachments/assets/460bb1eb-1f71-4c2a-b5ad-9330d086e09a)
 
+[Check UserControllerTesting](src/test/java/com/user/usermanagementapi/UserControllerTest.java)
+
 ---
 
-## FrontEnd Integration
+## FrontEnd-Integration
 [Check this frontendreadme.md](https://github.com/KhushiRaj23/user-management-JPA/blob/frontEnd-Integration/FRONTENDREADME.md)
 
 ## 🪄Lombok 
@@ -182,6 +204,98 @@ Lombok achieves reducing boilerplate code by generating the code automatically d
 | **`User` Entity**    | JPA model with Lombok to remove boilerplate.   | \* Fields: `id`, `name`, `email`, `password`, timestamps.<br>\* Roles stored as an eager `@ElementCollection` (`user_roles` table).<br>\* Passwords are saved **already hashed** (`BCryptPasswordEncoder`).                                                                                                                                                                                                                                                     |
 
 > **Result:** the API is protected end‑to‑end: credentials are securely hashed, every request is authorised by role, and no server‑side session is kept (perfect for frontend/SPAs or mobile clients).
+
+![create Users](https://github.com/user-attachments/assets/c158e704-fb45-4b0a-904d-191b6a397158)
+
+[Check SecurityConfig](src/main/java/com/user/usermanagementapi/service/SecurityConfig.java)<br></br>
+[Check UserDetail](src/main/java/com/user/usermanagementapi/service/UserDetail.java)
+
+---
+
+## 🔐 JWT Authentication
+
+This project secures all protected REST endpoints with **JSON Web Tokens (JWT)**.
+A short overview of how it works in this codebase:
+
+| Layer               | File                     | Purpose                                                                                                       |
+| ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| **Token creation**  | `JwtService.java`        | Generates signed HS‑256 tokens containing the user’s *username* and a `roles` claim.                          |
+| **Request filter**  | `JwtAuthFilter.java`     | Intercepts every request, extracts the “Bearer \<token>” header, validates it, and loads user details.        |
+| **Security config** | `SecurityConfig.java`    | Wires the filter into Spring Security, disables sessions (stateless), and opens only the *register* endpoint. |
+| **Unit tests**      | `JwtServiceTesting.java` | Verifies token generation, extraction, positive validation, and tamper detection.                             |
+
+---
+
+### 1  Configure your secret key
+
+Add a **256‑bit base‑64 key** and an expiry time (ms) in `application.properties`:
+
+```properties
+# 32 raw bytes → 44‑char base64; generate once with `openssl rand -base64 32`
+jwt.secret     = P7S1M6Q7B4NzKyKYa9FX3qEbAAk+WlCwTOhHfvF+Qjw=
+jwt.expiration = 14400000      # 4 hours
+```
+
+> **Prod tip:** set `JWT_SECRET` as an environment variable instead of hard‑coding it.
+
+---
+
+### 2  How a token is built
+
+```java
+String token = Jwts.builder()
+    .subject(username)                             // → Claims::getSubject
+    .claims(Map.of("roles", rolesSet))             // custom claim
+    .issuedAt(now)
+    .expiration(now.plus(expiration))
+    .signWith(secretKey, SignatureAlgorithm.HS256) // HS‑256
+    .compact();
+```
+
+*See `JwtService#createToken(…)` for the full code.*
+
+---
+
+### 3  Using the token
+
+1. **Acquire** – after a successful login (or registration) the backend returns:
+
+   ```json
+   { "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+   ```
+
+2. **Send on every call** – add an HTTP header:
+
+   ```
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
+
+3. **Result** – `JwtAuthFilter` verifies the signature and populates
+   `SecurityContextHolder`. Downstream controllers can use the usual
+   `@PreAuthorize("hasRole('ROLE_ADMIN')")`, etc.
+
+---
+
+### 4  Running the unit tests
+
+```bash
+# Maven
+mvn clean test
+```
+
+The suite (`JwtServiceTesting`) covers:
+
+* **Token generated** ‑ not blank.
+* **Username extraction** ‑ round trip equals original username.
+* **Happy path validation** ‑ fresh token ✓.
+* **Negative path validation** ‑ tampered token ✗.
+
+![JwtService Testing](https://github.com/user-attachments/assets/f08d44a8-df6a-4ab2-8170-fc4497c21118)
+
+[Check JwtService](src/main/java/com/user/usermanagementapi/service/JwtService.java) <br></br>
+[check JwtServiceTest](src/test/java/com/user/usermanagementapi/JwtServiceTesting.java)
+
+---
 
 ### Author
 
