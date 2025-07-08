@@ -1,6 +1,7 @@
 package com.user.usermanagementapi.service;
 
 import com.user.usermanagementapi.repository.UserRepository;
+import com.user.usermanagementapi.security.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,6 +29,12 @@ public class SecurityConfig {
     @Autowired
     private UserRepository userRepository;
 
+    private final JwtAuthFilter jwtAuthFilter;
+    private final  UserDetail customUserDetailsService;
+    public SecurityConfig(UserDetail customUserDetailsService,JwtAuthFilter jwtAuthFilter){
+        this.customUserDetailsService=customUserDetailsService;
+        this.jwtAuthFilter=jwtAuthFilter;
+    }
     @Bean
     public UserDetailsService userDetailsService(){
         return new UserDetail();
@@ -69,11 +77,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(cors->cors.configurationSource(corsConfigurationSource()))  //link CORS bean
                 .csrf(AbstractHttpConfigurer::disable)   //disable CSRF
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth->auth.requestMatchers("/api/users/register").permitAll() //open endpoint
                         .requestMatchers("/api/users/page").permitAll()   //open endpoint
                         .requestMatchers("/api/users").hasRole("ADMIN")   //only ADMIN
                         .requestMatchers("/api/users").hasAnyRole("USER","ADMIN") //USER or ADMIN
-                        .anyRequest().authenticated()).httpBasic(Customizer.withDefaults()).sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); //no HTTP session
+                        .anyRequest().authenticated())
+//                        .httpBasic(Customizer.withDefaults())
+                        .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); //no HTTP session
         return http.build();
     }
+
 }

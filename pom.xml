@@ -91,7 +91,29 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>           <!-- test‑only -->
         </dependency>
-
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.5</version>
+        </dependency>
+<!--        Adding JWT dependencies-->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.5</version>
+            <scope>runtime</scope>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.user</groupId>-->
+<!--            <artifactId>usermanagementapi</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
     </dependencies>
 
