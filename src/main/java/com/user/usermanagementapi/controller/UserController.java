@@ -8,10 +8,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 //mark this class as a REST controller, handling incoming HTTP requests
 @CrossOrigin(origins = {
@@ -23,12 +25,33 @@ import java.util.Optional;
 public class UserController {
     @Autowired //inject the UserRepository dependency
     private UserRepository userRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
+
+    //name=admin password=admin123 email=admin@gmail.com
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@Valid @RequestBody User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409: email taken
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(Set.of("ROLE_USER"));
+        User saved = userRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
 
     @PostMapping
-    public ResponseEntity<List<User>> createUser(@Valid @RequestBody List<@Valid User> users){
-        List<User> savedUsers=userRepository.saveAll(users);
-        return  ResponseEntity.status(HttpStatus.CREATED).body(savedUsers);
+    public ResponseEntity<List<User>> createUsers(@RequestBody List<@Valid User> users) {
+        users.forEach(u -> {
+            u.setPassword(passwordEncoder.encode(u.getPassword()));
+            if (u.getRoles() == null || u.getRoles().isEmpty()) {
+                u.setRoles(Set.of("ROLE_USER"));
+            }
+        });
+        List<User> savedUsers = userRepository.saveAll(users);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUsers);
     }
 
     @GetMapping
@@ -41,15 +64,20 @@ public class UserController {
         return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id,@Valid @RequestBody User userDetails){
-        return userRepository.findById(id).map(existingUser ->{
-            existingUser.setName(userDetails.getName());
-            existingUser.setEmail(userDetails.getEmail());
-            User updatedUser= userRepository.save(existingUser);
-
-            return ResponseEntity.ok(updatedUser);
+    public ResponseEntity<User> updateUser(@PathVariable Long id,
+                                           @Valid @RequestBody User userDetails) {
+        return userRepository.findById(id).map(existing -> {
+            existing.setName(userDetails.getName());
+            existing.setEmail(userDetails.getEmail());
+            if (!userDetails.getPassword().isBlank()) {
+                existing.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+            }
+            existing.setRoles(userDetails.getRoles()); // optional: validate roles
+            User updated = userRepository.save(existing);
+            return ResponseEntity.ok(updated);
         }).orElse(ResponseEntity.notFound().build());
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id){
         if(userRepository.existsById(id)){

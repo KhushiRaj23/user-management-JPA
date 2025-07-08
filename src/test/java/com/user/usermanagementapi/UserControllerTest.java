@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import org.springframework.security.test.context.support.WithMockUser;
 @SpringBootTest
 @AutoConfigureMockMvc
 public class UserControllerTest {
@@ -43,20 +43,21 @@ public class UserControllerTest {
     void setUp(){
         userRepository.deleteAll(); //to maintain isolation
         objectMapper.registerModule(new JavaTimeModule());
-        User initialUser1=new User("John Doe","John.doe@example.com");
-        User initialUser2=new User("Jane Smith","Jane.smith@example.com");
+        User initialUser1=new User("John Doe","John.doe@example.com","john123");
+        User initialUser2=new User("Jane Smith","Jane.smith@example.com","jane123");
 
         List<User> savedInitialUsers=userRepository.saveAll(Arrays.asList(initialUser1,initialUser2));
         this.user1=savedInitialUsers.get(0);
         this.user2=savedInitialUsers.get(1);
 
-        manyUsers= IntStream.rangeClosed(1,25).mapToObj(i->new User("User "+i,"user"+ i +"@example.com")).collect(Collectors.toList());
+        manyUsers= IntStream.rangeClosed(1,25).mapToObj(i->new User("User "+i,"user"+ i +"@example.com","user"+i+"123")).collect(Collectors.toList());
         userRepository.saveAll(manyUsers);
 
         initialUserCount=userRepository.count();
     }
 
     @Test
+    @WithMockUser(roles="USER")
     void testGetUserByIdFound() throws Exception {
         //used to mock http request like GET,PUT,POST.....
         //ACT
@@ -69,10 +70,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testCreateUsers()throws Exception{
         //---ARRANGE---
-        User newUser1=new User("utkarsh","utkarsh@gmail.com");
-        User newUser2=new User("Khushi","khushi@gmail.com");
+        User newUser1=new User("utkarsh","utkarsh@gmail.com","utkarsh123");
+        User newUser2=new User("Khushi","khushi@gmail.com","khushi123");
         List<User> newUsers=Arrays.asList(newUser1,newUser2);
         //---ACT---
         mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(newUsers)))
@@ -89,6 +91,7 @@ public class UserControllerTest {
     }
     //Implement these test methods
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testDeleteUserFound() throws Exception {
         mockMvc.perform(delete("/api/users/{id}",user1.getId())).andExpect(status().isNoContent());
         assertFalse(userRepository.existsById(user1.getId()));
@@ -97,6 +100,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testDeleteUserNotFound() throws Exception{
         Long nonExistedId=user1.getId()+101;  //any value which does not exist in database
         mockMvc.perform(delete("/api/users/{id}",nonExistedId)).andExpect(status().isNotFound());

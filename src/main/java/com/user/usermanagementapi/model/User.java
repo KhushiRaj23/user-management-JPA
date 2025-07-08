@@ -8,9 +8,11 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.beans.PropertyValues;
 
 import java.time.LocalDateTime;
-
+import java.util.HashSet;
+import java.util.Set;
 
 
 //marks this class as a JPA entity
@@ -44,6 +46,17 @@ public class User {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @NonNull
+    @NotBlank
+    private String password;
+
+
+    @ElementCollection(fetch=FetchType.EAGER)
+    @CollectionTable(name = "user_roles",joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+    private Set<String> roles=new HashSet<>();
+
 
 
 }
